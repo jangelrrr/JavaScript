@@ -17,7 +17,7 @@ let cambio = new Map ([
 ])
 
 function añadirCambio (cambio, user, pass) {
-	if (user == 'user' && pass = 'pass') {
+	if (user == 'user' && pass == 'pass') {
 		cambio.forEach((value, key) => {cambio.set(key, 10)})
 	} else {
 		console.log('Usuario o contraseña incorrectos')
@@ -26,10 +26,28 @@ function añadirCambio (cambio, user, pass) {
 
 function verCambio (cambio, user, pass) {
 	if (user == 'user' && pass == 'pass') {
-		cambio.forEach ((value, key) => {console.log(`Monedas de ${key} centimos hay ${value} monedas`})
+		cambio.forEach ((value, key) => {console.log(`Monedas de ${key} centimos hay ${value} monedas`))
 	} else {
 		console.log('Usuario o contraseña incorrectos')
 	}	
 }
 
-//misma funcion para ver y añadir stock
+function añadirStock (productos, user, pass) {
+	if (user == 'user' && pass == 'pass') {
+		for (let [key, value] of productos) {
+			productos.set(key, [value[0], 10, value[2]])
+		}
+	} else {
+		console.log('Usuario o contraseña incorrectos')
+	}
+}
+
+function verCambio (cambio, user, pass) {
+	if (user == 'user' && pass == 'pass') {
+		for (let [key, value] of productos) {
+			
+		}
+	} else {
+		console.log('Usuario o contraseña incorrectos')
+	}	
+}
