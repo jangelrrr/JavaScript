@@ -1,115 +1,143 @@
-let productos = new Map ([
-	[1, ['Coca-cola', 10, 200]],
-	[2, ['Aquarius', 10, 200]],
+let products = new Map ([
+	[1, ['Coca-cola', 10, 220]],
+	[2, ['Aquarius', 10, 240]],
 	[3, ['Agua', 10, 150]],
-	[4, ['Bocadillo', 10, 400]],
+	[4, ['Bocadillo', 10, 405]],
 	[5, ['Gominolas', 10, 120]],
 	[6, ['Red Bull', 10, 400]]
 ])
 	
-let cambio = new Map ([
+let change = new Map ([
 	[5, 10],
-	[10, 10],
-	[20, 10],
+	[10, 4],
+	[20, 4],
 	[50, 10],
 	[100, 10],
 	[200, 10]
 ])
 
-let caja = 0
+let cash = 0
 
-function añadirCambio (cambio, user, pass) {
+function addChange (user, pass, ...coins) {
 	if (user == 'user' && pass == 'pass') {
-		cambio.forEach((value, key) => {cambio.set(key, 10)})
-	} else {
-		console.log('Usuario o contraseña incorrectos')
-	}
-}
-
-function verCambio (cambio, user, pass) {
-	if (user == 'user' && pass == 'pass') {
-		cambio.forEach ((value, key) => {console.log(`Monedas de ${key} centimos hay ${value} monedas`)})
-		console.log(`La caja es de ${caja}`)
-	} else {
-		console.log('Usuario o contraseña incorrectos')
-	}	
-}
-
-function añadirStock (productos, user, pass) {
-	if (user == 'user' && pass == 'pass') {
-		for (let [key, value] of productos) {
-			productos.set(key, [value[0], 10, value[2]])
+		for (let coin of coins) {
+			change.set(coin, change.get(coin) + 1)
 		}
 	} else {
 		console.log('Usuario o contraseña incorrectos')
 	}
 }
 
-function verStock (cambio, user, pass) {
+function seeChange (user, pass) {
 	if (user == 'user' && pass == 'pass') {
-		for (let [key, value] of productos) {
-			console.log(`${productos.get(key)[0]} hay ${productos.get(key)[1]}`)
+		change.forEach ((value, key) => {console.log(`coins de ${key} centimos hay ${value} coins`)})
+		console.log(`La caja es de ${cash}`)
+	} else {
+		console.log('Usuario o contraseña incorrectos')
+	}	
+}
+
+function addStock (user, pass, ...items) {
+	if (user == 'user' && pass == 'pass') {
+		for (let item of items) {
+			products.get(item)[1] += 1
+		}
+	} else {
+		console.log('Usuario o contraseña incorrectos')
+	}
+}
+
+function seeStock (user, pass) {
+	if (user == 'user' && pass == 'pass') {
+		for (let [key, value] of products) {
+			console.log(`${products.get(key)[0]} hay ${products.get(key)[1]}`)
 		}
 	} else {
 		console.log('Usuario o contraseña incorrectos')
 	}	
 }
 
-function comprar(numProducto, monedas) {
-    const tipoMonedas = [200, 100, 50, 20, 10, 5]
-    let dineroEntrada = 0
-    //introducimos las monedas si son soportadas
-    for (let i of monedas) {
-        if (!tipoMonedas.includes(i)) {
+const warnings = []
+
+function seeWarnings(user, pass) {
+	if (user == 'user' && pass == 'pass') {
+		for (let warning of warnings) {
+			console.log(warning)
+		}
+	} else {
+		console.log('Usuario o contraseña incorrectos')
+	}
+}
+
+function buy(numProduct, coins) {
+    const typeCoins = [200, 100, 50, 20, 10, 5]
+    let moneyInput = 0
+    //introducimos las coins si son soportadas
+    for (let coin of coins) {
+        if (!typeCoins.includes(coin)) {
             console.log('Moneda no soportada')
-            return monedas
+            return coins
         } else {
-            dineroEntrada += i
-            if (cambio.get(i) >= 10) {
-                caja += i
+            moneyInput += coin
+            if (change.get(coin) >= 10) {
+                cash += coin
             } else {
-                cambio.set(i, cambio.get(i) + 1)
+                change.set(coin, change.get(coin) + 1)
             }
         }
     }
-    //restamos las monedas menos el coste
-    let costeVuelta = dineroEntrada - productos.get(numProducto)[2]
+    //restamos las coins menos el coste
+    let costBack = moneyInput - products.get(numProduct)[2]
 	//restamos el producto al stock
-	if (productos.get(numProducto)[1] == 0) {
-		console.log(`No hay ${productos.get(numProducto)[0]}`)
-		return monedas
-	} else if (productos.get(numProducto)[1] <=3) {
-		console.log(`Bajo stock de ${productos.get(numProducto)[0]}`)
-		productos.get(numProducto)[1] -= 1
+	if (!products.has(numProduct)) {
+		console.log('Producto no disponible')
+		return coins
+	} else if (products.get(numProduct)[1] == 0) {
+		console.log(`No hay ${products.get(numProduct)[0]}`)
+		warnings.push(`No hay ${products.get(numProduct)[0]}`)
+		return coins
+	} else if (products.get(numProduct)[1] <=3 && !warnings.includes(`Bajo stock de ${products.get(numProduct)[0]}`)) {
+		warnings.push(`Bajo stock de ${products.get(numProduct)[0]}`)
+		products.get(numProduct)[1] -= 1
 	} else {
-		productos.get(numProducto)[1] -= 1
+		products.get(numProduct)[1] -= 1
 	}
-    //calculamos la vuelta
-    let vuelta = []
-    let cantidadMonedas
-    let indice = 0
-	let monedaActual
-    while (costeVuelta != 0) {
-		monedaActual = tipoMonedas[indice]
-        cantidadMonedas = parseInt(monedaActual / costeVuelta)
-        if (cantidadMonedas > 0) {
-            for (let j = 0; j <= cantidadMonedas; j++) {
-				if (cambio.get(monedaActual) == 0) {
-					continue
+    //calculamos la back
+    let back = []
+    let numCoins
+    let index = 0
+	let coinCurrent
+    while (costBack != 0) {
+		coinCurrent = typeCoins[index]
+        numCoins = parseInt(costBack / coinCurrent)
+        if (numCoins > 0) {
+            for (let j = 0; j < numCoins; j++) {
+				if (change.get(coinCurrent) == 0) {
+					warnings.push(`No hay cambio de ${coinCurrent}`)
+					break
 				} else {
-					vuelta.push(monedaActual)
-					cambio.set(monedaActual, cambio.get(monedaActual) - 1)
-					costeVuelta -= monedaActual
+					back.push(coinCurrent)
+					change.set(coinCurrent, change.get(coinCurrent) - 1)
+					if (change.get(coinCurrent) <= 3 && !warnings.includes(`Poco cambio de ${coinCurrent}`)) {
+						warnings.push(`Poco cambio de ${coinCurrent}`)
+					}
+					costBack -= coinCurrent
 				}
-				
 			}
         } else {
+			index++
 			continue
 		}
-		indice++
+		index++
     }
-	return `Nombre del producto: ${productos.get(numProducto)[0]}\nVuelta: ${vuelta}`
+	return `Nombre del producto: ${products.get(numProduct)[0]}\nback: ${back}`
 
 }
 
-comprar(3, [100, 200, 50])
+buy(3, [200, 200, 50])
+buy(3, [200, 200])
+buy(1, [200, 200])
+buy(5, [200, 50, 100])
+seeChange('user', 'pass')
+seeStock('user', 'pass')
+seeWarnings('user', 'pass')
