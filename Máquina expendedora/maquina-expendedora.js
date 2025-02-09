@@ -1,3 +1,50 @@
+const rl = require('readline').createInterface({
+	input: process.stdin,
+	output: process.stdout
+  });
+
+
+function addChange() {
+	const coins = [5, 10, 20, 50, 100, 200]
+	rl.question('Ingresa monedas (o "0" para terminar): ', (coin) => {
+		coin = Number(coin)
+		if (coin === 0) {
+			return seeChange()
+		} else if (isNaN(coin) || !(coins.includes(coin))) {
+			console.log('Moneda no soportada')
+			addChange()
+		} else {
+			change.set(coin, change.get(coin) + 1)
+			addChange()
+		}
+	})
+}
+
+function addStock() {
+	let items = new Map([
+		[1, 'Coca-cola'],
+		[2, 'Aquarius'],
+		[3, 'Agua'],
+		[4, 'Bocadillo'],
+		[5, 'Gominolas'],
+		[6, 'Red Bull']
+	])
+	console.log(items)
+	const numberItems = [...items.keys()]
+	rl.question('Ingresa productos (o "0" para terminar): ', (product) => {
+		product = Number(product)
+		if (product === 0) {
+			return seeStock()
+		} else if (isNaN(product) || !(numberItems.includes(product))) {
+			console.log('Número de producto no soportado')
+			addStock()
+		} else {
+			products.get(product)[1] += 1
+			addStock()
+		}
+	})
+  }
+
 let products = new Map ([
 	[1, ['Coca-cola', 10, 220]],
 	[2, ['Aquarius', 10, 240]],
@@ -18,55 +65,86 @@ let change = new Map ([
 
 let cash = 0
 
-function addChange (user, pass, ...coins) {
-	if (user == 'user' && pass == 'pass') {
-		for (let coin of coins) {
-			change.set(coin, change.get(coin) + 1)
-		}
-	} else {
-		console.log('Usuario o contraseña incorrectos')
-	}
+
+function seeChange () {
+	change.forEach ((value, key) => {console.log(`coins de ${key} centimos hay ${value} coins`)})
+	console.log(`La caja es de ${cash}`)
+	modeAdmin()	
 }
 
-function seeChange (user, pass) {
-	if (user == 'user' && pass == 'pass') {
-		change.forEach ((value, key) => {console.log(`coins de ${key} centimos hay ${value} coins`)})
-		console.log(`La caja es de ${cash}`)
-	} else {
-		console.log('Usuario o contraseña incorrectos')
-	}	
-}
 
-function addStock (user, pass, ...items) {
-	if (user == 'user' && pass == 'pass') {
-		for (let item of items) {
-			products.get(item)[1] += 1
-		}
-	} else {
-		console.log('Usuario o contraseña incorrectos')
-	}
-}
-
-function seeStock (user, pass) {
-	if (user == 'user' && pass == 'pass') {
-		for (let [key, value] of products) {
-			console.log(`${products.get(key)[0]} hay ${products.get(key)[1]}`)
-		}
-	} else {
-		console.log('Usuario o contraseña incorrectos')
-	}	
+function seeStock () {
+	products.forEach((value, key) => {console.log(`${products.get(key)[0]} hay ${products.get(key)[1]}`)})
+	modeAdmin()	
 }
 
 const warnings = []
 
-function seeWarnings(user, pass) {
-	if (user == 'user' && pass == 'pass') {
-		for (let warning of warnings) {
-			console.log(warning)
-		}
+function seeWarnings() {
+	if (!(warnings.length == 0)) {
+		warnings.forEach((warning) => {console.log(warning)})
 	} else {
-		console.log('Usuario o contraseña incorrectos')
+		console.log('No hay avisos')
 	}
+	modeAdmin()
+}
+
+let salir = false
+function modeAdmin() {
+	let optionsMap = new Map([
+		[0, 'Ver Cambio'],
+		[1, 'Añadir Cambio'],
+		[2, 'Ver Stock'],
+		[3, 'Añadir Stock'],
+		[4, 'Ver avisos'],
+		[5, 'Salir']
+	])
+
+	function menu(user, pass) {
+		if (user == 'user' && pass == 'pass') {
+			console.log(optionsMap)
+			function askOption() {
+				rl.question('Elija una opción (0-5): ', (option) => {
+					const optionNumber = parseInt(option)
+                    if (optionsMap.has(optionNumber)) {
+						let nextAction
+						switch (optionNumber) {
+							case 0: nextAction = seeChange; break;
+							case 1: nextAction = addChange; break;
+							case 2: nextAction = seeStock; break;
+							case 3: nextAction = addStock; break;
+							case 4: nextAction = seeWarnings; break;
+							case 5:
+								console.log('Saliendo del programa...')
+								rl.close()
+								salir = true
+								return
+
+						}
+						if (nextAction) {
+							nextAction()
+						}
+					} else {
+						console.log('Opción inválida. Intentelo de nuevo')
+						askOption()
+					}
+				})
+			}
+			askOption()
+		} else {
+			console.log('Usuario o contraseña incorrecto')
+			modeAdmin()
+		}
+	}
+	if (salir) {
+		return
+	}
+	
+	rl.question('Escribe el usuario: ', (user) => {
+		rl.question('Escribe el password: ', (pass) => {
+		  	menu(user, pass); 
+		});
+	});
 }
 
 function buy(numProduct, coins) {
@@ -134,10 +212,12 @@ function buy(numProduct, coins) {
 
 }
 
-buy(3, [200, 200, 50])
+modeAdmin()
+
+/*buy(3, [200, 200, 50])
 buy(3, [200, 200])
 buy(1, [200, 200])
 buy(5, [200, 50, 100])
 seeChange('user', 'pass')
 seeStock('user', 'pass')
-seeWarnings('user', 'pass')
+seeWarnings('user', 'pass')*/
