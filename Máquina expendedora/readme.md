@@ -4,16 +4,13 @@
 
 ###### Instrucciones
 
+El estado actual no es el que busco, pero lo estoy haciendo poco a poco.
+En main hay el programa inicial, pero no el que es mi objetivo. En la rama objetive iré escribiendo el programa. 
 
-Entrar cambio y numero de producto  
-Salida, nombre de producto, precio  
-Salida, vuelta  
-Cambio - posibilidad de ver el cambio y de meter cambio, con login  
-Posibilidad de utilizar pandas, resumen de datos de archivo csv  
+*Objetivo*
 
-Funcion comprar  
-Mirar que el numero de producto sea valido y eliminar del stock, si el stock esta por debajo de 3,   aviso de bajo stock del numero de producto  
-Mirar que monedas son correctas e ir añadiendo al cambio, a menos que el cambio de la moneda sea mayor de 10, en ese caso sumar la moneda a la variable caja.  
-Salida, mostrar nombre de producto y vuelta  
-Al dar la vuelta, ir eliminando las monedas del cambio, si resulta menor de 3, aviso bajo cambio de moneda, si es igual a 0 no dar cambio de esa moneda  
-Añadir fecha, numero de producto y precio a archivo csv  
+Funciones para el usuario: comprar
+Cada compra se guardará en un archivo sales.json que guardará la fecha y el id del producto comprado.
+Funciones para el administrador: ver y añadir cambio; ver, añadir y eliminar productos; ver y eliminar avisos.
+Las funciones para el administrador estarán guardados en un archivo admin.js y su funcionamiento es mostrar un menú con todas las funciones, con un login antes, y cada función que se llame volverá al menú, si el usuario está logeado.
+Los archivos que guardan el cambio, los productos y los avisos serán JSON: change, products y warnings, respectivamente.
