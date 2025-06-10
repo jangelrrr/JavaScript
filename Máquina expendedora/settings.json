@@ -2,5 +2,6 @@
 	"validCoins" : ["0.05", "0.10", "0.20", "0.50", "1.00", "2.00"],
 	"changeLimit" : 10,
 	"lowStock" : 3,
+	"lowChange" : 3,
 	"lastIdWarnings" : 0
 }

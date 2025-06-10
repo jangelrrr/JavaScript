@@ -1,6 +1,6 @@
 import fsPromises from "node:fs/promises";
 
-async function readJsonFile(filePath) {
+export async function readJsonFile(filePath) {
     try {
         const fileContent = await fsPromises.readFile(filePath, 'utf-8');
         // Si el archivo está vacío, JSON.parse daría error.
@@ -17,7 +17,7 @@ async function readJsonFile(filePath) {
     }
 }
 
-async function writeJsonFile(filePath, data) {
+export async function writeJsonFile(filePath, data) {
     try {
         await fsPromises.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
     } catch (error) {
@@ -26,7 +26,7 @@ async function writeJsonFile(filePath, data) {
     }
 }
 
-async function readCsvFile(filePath) {
+export async function readCsvFile(filePath) {
 	try {
 		const fileContent = await fsPromises.readFile(filePath, 'utf-8');
 		const lines = fileContent.trim().split('\n')
@@ -41,7 +41,7 @@ async function readCsvFile(filePath) {
         throw new Error(`No se pudo cargar el archivo ${filePath}: ${error.message}`);
 	}
 }
-async function writeCsvFile(filePath, data) {
+export async function writeCsvFile(filePath, data) {
 	try {
 		await fsPromises.writeFile(filePath, data, 'utf-8')
 	} catch (error) {
@@ -49,10 +49,3 @@ async function writeCsvFile(filePath, data) {
         throw new Error(`No se pudo cargar el archivo ${filePath}: ${error.message}`);
 	}
 }
-
-module.exports = {
-    readJsonFile,
-    writeJsonFile,
-    readCsvFile,
-    writeCsvFile
-};

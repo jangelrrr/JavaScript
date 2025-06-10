@@ -7,7 +7,7 @@ function input(query) {
 	})
 }
 const TODAY = new Date()
-const TODAY_SHORT = `${date.getMonth()+1}-${date.getFullYear()}`
+const TODAY_SHORT = `${TODAY.getMonth()+1}-${TODAY.getFullYear()}`
 class handler {
 	constructor(file) {
 		this.file = file
@@ -38,18 +38,30 @@ class handler {
     }
 }
 class changeHandler extends handler {
+	_formatCoin(coin) {
+		return Number(coin).toFixed(2)
+	}
     async read(coin) {
     	await this.initialized
-		return this.data[coin]
+		return this.data[this._formatCoin(coin)]
 	}
 	async saveChange(coin) {
 		await this.initialized
-		this.data[coin]++
+		const formattedCoin = this._formatCoin(coin);
+		if (this.data[formattedCoin] === undefined) {
+            this.data[formattedCoin] = 0;
+        }
+		this.data[formattedCoin]++
 		await this.saveData()
 	}
 	async removeChange(coin) {
 		await this.initialized
-		this.data[coin]--
+		const formattedCoin = this._formatCoin(coin);
+        if (this.data[formattedCoin] === undefined) {
+            console.warn(`Intento de remover moneda inexistente: ${formattedCoin}`);
+            return;
+        }
+        this.data[formattedCoin]--
 		await this.saveData()
 	}
 }
@@ -78,15 +90,15 @@ class warningsHandler extends handler {
 	//{id : {fecha, category, id, cantidad, mensaje}}
     async addWarnings(category, id, quantity) {
     	await this.initialized
-    	let key = this.constants.lastIdWarnings +1
-    	await saveIdWarning(key)
+    	let key = Number(this.constants['lastIdWarnings']) +1
+    	await this.saveIdWarning(key)
     	let message = `Solo hay ${quantity} ${category==='change' ? 'monedas' : 'productos'} de ${id}`
     	let line = {TODAY, category, id, quantity, message}
     	this.data[key] = line
     	await writeJsonFile(this.file, this.data)
     }
     async saveIdWarning(id) {
-    	this.constants.lastIdWarnings = id
+    	this.constants['lastIdWarnings'] = id
         await writeJsonFile(this.file, this.constants);
         console.log('ID guardado con éxito.')
     }
@@ -114,15 +126,22 @@ class csvHandler{
 class cashHandler extends csvHandler {
 	async writeCash(cash) {
 		await this.initialized
-		let lastLine = this.data[this.data.length-1]
-		let [date, amount] = lastLine.split(',').map(v => v.trim())
-		if (date === TODAY_SHORT) {
-			amount += cash
-			lastLine = [date, amount].join(',')
-			this.data[this.data.length-1] = lastLine
-			await this.saveData()
+		if (this.data.length !== 0) {
+			let lastLine = this.data[this.data.length-1]
+			let [date, amount] = lastLine.split(',').map(v => v.trim())
+			if (date === TODAY_SHORT) {
+				amount = Number(amount)
+				amount += cash
+				lastLine = [date, amount].join(',')
+				this.data[this.data.length-1] = lastLine
+				await this.saveData()
+			} else {
+				lastLine = [TODAY_SHORT, cash].join(',')
+				this.data.push(lastLine)
+				await this.saveData()
+			}
 		} else {
-			lastLine = [TODAY_SHORT, cash].join(',')
+			const lastLine = [TODAY_SHORT, cash].join(',')
 			this.data.push(lastLine)
 			await this.saveData()
 		}
@@ -141,40 +160,42 @@ class salesHandler extends csvHandler {
 
 class processSell {
 	constructor() {
-		this.warnings = new warningsHandler("adminFolder/warning.json");
-		this.products = new productsHandler("/adminFolder/products.json");
-		this.change = new changeHandler('/adminFolder/change.json')
-		this.cash = new CashHandler('./cash.csv')
+		this.warnings = new warningsHandler("./adminFolder/warnings.json");
+		this.products = new productsHandler("./adminFolder/products.json");
+		this.change = new changeHandler('./adminFolder/change.json')
+		this.cash = new cashHandler('./cash.csv')
 		this.sales = new salesHandler('./sales.csv')
 	}
 	async startPurchase() {
 		//menu para hacer compras
 		await this.products.showProducts()
 		let option = await input('Quieres realizar una compra(y/n): ')
-		if (option === 'y') {
+		while (option === 'y') {
 			await this.processTransaction()
-		} else {
-			console.log('Muchas gracias por todo.')
-			rl.close()
-			return
+			option = await input('Quieres realizar otra compra(y/n): ')
 		}
+		console.log('Muchas gracias por todo.')
+		rl.close()
+		return
 	}
 	async collectPayment() {
 		let coin
 		let sum = 0
+		await this.change.initialized
 		while (coin !== 0) {
-			coin = input('Inserte moneda (0 para salir): ')
+			coin = await input('Inserte moneda (0 para salir): ')
+			let formattedCoin = Number(coin).toFixed(2); 
 			if (coin === "0") {
 				return sum
-			} else if (new Set(this.change.constants.validCoins).has(coin)) {
+			} else if (!new Set(this.change.constants.validCoins).has(formattedCoin)) {
 				console.warn('La moneda no es válida.')
 				continue
 			} else {
-				sum += Number(coin)
-				if (await this.change.read(coin) >= this.change.constants.changeLimit) {
-					await this.cash.writeCash(Number(coin))
+				sum += Number(formattedCoin)
+				if (await this.change.read(formattedCoin) >= this.change.constants.changeLimit) {
+					await this.cash.writeCash(Number(formattedCoin))
 				} else {
-					await this.change.saveChange(coin)
+					await this.change.saveChange(formattedCoin)
 				}
 			}
 		}
@@ -196,14 +217,21 @@ class processSell {
 	}
 	async calcChange(sum) {
 		const changeReturn = []
-		const coins = this.change.constants['validCoins'].sort((a, b) => b.localeCompare(a)).map(Number)
+		sum = Math.round(sum * 100)
+		const coins = this.change.constants['validCoins'].map(Number).sort((a, b) => b-a).map(n => Math.round(n*100))
 		for (let coin of coins) {
-			let numCoins = parseInt(sum / coin)
-			sum -= coin * numCoins
-			while (numCoins>0) {
-				changeReturns.push(coin)
-				await this.change.removeChange(coin)
-				numCoins--
+			let numCoins = Math.floor(sum / coin)
+			if (numCoins > 0 && await this.change.read(coin/100) > 0) {
+				sum -= coin * numCoins
+				coin = coin/100
+				while (numCoins>0) {
+					changeReturn.push(coin)
+					await this.change.removeChange(coin)
+					if (await this.change.read(coin) === this.change.constants.lowChange) {
+						await this.warnings.addWarnings("change", coin, 3)
+					}
+					numCoins--
+				}
 			}
 			if (sum <= 0) {
 				return changeReturn
@@ -240,3 +268,5 @@ Muchas gracias.`)
 ${change}`)
 	}
 }
+const newBuy = new processSell()
+newBuy.startPurchase()
