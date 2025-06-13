@@ -99,7 +99,7 @@ class warningsHandler extends handler {
     }
     async saveIdWarning(id) {
     	this.constants['lastIdWarnings'] = id
-        await writeJsonFile(this.file, this.constants);
+        await writeJsonFile(this.fileSettings, this.constants);
         console.log('ID guardado con éxito.')
     }
 }
@@ -151,7 +151,7 @@ class salesHandler extends csvHandler {
 	// fecha, id, precio
 	async writeSales(id, price) {
 		await this.initialized
-		let line = [TODAY, id, price].join(',')
+		let line = [TODAY, id, price].join(',') + '\n'
 		this.data.push(line)
 		await this.saveData()
 	}
@@ -248,7 +248,7 @@ class processSell {
 			sum += await this.collectPayment()
 		}
 		await this.products.removeStock(id)
-		if (this.products.read(id, 'stocks') === this.products.constants['lowStock']) {
+		if (this.products.read(id, 'stock') === 3) {
 			await this.warnings.addWarnings('stock', id, this.products.constants['lowStock'])
 		}
 		const changeReturn = await this.calcChange(sum - price)

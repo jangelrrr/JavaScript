@@ -60,15 +60,19 @@ class handler {
     }
 }
 class productsHandler extends handler {
-	async show(category) {
+	async show(category, id=null) {
 		await this.initialized
 		if (category !== 'stock' && category !== 'price') {
 			console.warn('No es una categoría válida.')
 			return
 		}
-		Object.values(this.data).forEach(value => {
-			console.log(`Nombre: ${value.name} - ${category}: ${value[category]}`)
-		})
+		if (id) {
+			console.log(`Id: ${id} - ${category}: ${this.data[id][category]}`)
+		} else {
+			Object.entries(this.data).forEach(([key, value]) => {
+				console.log(`Id: ${key} Nombre: ${value.name} - ${category}: ${value[category]}`)
+			})
+		}
 	}
 	async change(category) {
 		await this.initialized;
@@ -76,7 +80,7 @@ class productsHandler extends handler {
 			console.warn('No es una categoría válida.')
 			return
 		}
-		await this.read(category)
+		await this.show(category)
 		const listIds = new Set(Object.keys(this.data))
 		while (true) {
     		let id = await input('Inserte id (0 para salir): ')
@@ -86,8 +90,9 @@ class productsHandler extends handler {
         		console.warn('Este id no existe.')
         		continue
     		}
+			let newValue
     		while (true) {
-    			let newValue = Number(await input('Inserte el nuevo valor: '))
+    			newValue = Number(await input('Inserte el nuevo valor: '))
     			if (!isNaN(newValue) && newValue>0) {
     				break
     			} else {
@@ -96,12 +101,19 @@ class productsHandler extends handler {
     		}
     		this.data[id][category] = newValue
     		console.log('Valor actualizado con éxito.')
-    		await this.read(category, id)
+    		await this.show(category, id)
 		}
 		await this.saveData()
 	}
 }
 class changeHandler extends handler {
+	_formatCoin(coin) {
+		return Number(coin).toFixed(2)
+	}
+    async read(coin) {
+    	await this.initialized
+		return this.data[this._formatCoin(coin)]
+	}
 	async show() {
 		await this.initialized
 		Object.entries(this.data).forEach(([key, value]) => {
@@ -110,28 +122,36 @@ class changeHandler extends handler {
 	}
 	async addChange() {
 		await this.initialized;
-		await this.read()
+		await this.show()
 		while (true) {
     		let coin = await input('Inserte moneda (0 para salir): ')
     		if (coin === '0') {
         		break
-    		} else if (new Set(this.constants.validCoins).has(coin)) {
+    		} else if (!new Set(this.constants.validCoins).has(coin)) {
         		console.warn('Esta moneda no existe.')
         		continue
     		} else {
-				this.data[coin]++
-				if (this.data[coin]>=this.constants.changeLimit) {console.log('El cambio de esa moneda está lleno.')}
-    			await this.read(coin)
+				if (this.data[coin]>=this.constants.changeLimit) {
+					console.log('El cambio de esa moneda está lleno.')
+				} else {
+					this.data[this._formatCoin(coin)]++
+    				await this.read(coin)
+				}
 			}
 		}
 		await this.saveData()
 		console.log('Cambios guardados con éxito.')
-		await this.read()
+		await this.show()
 	}
 }
 
 class warningsHandler extends handler {
 	//{id : {fecha, category, id, cantidad, mensaje}}
+	constructor(file) {
+		super(file)
+		this.products = new productsHandler("./products.json");
+		this.change = new changeHandler("./change.json");
+	}
 	async show() {
 		await this.initialized
 		Object.values(this.data).forEach(value => {
@@ -142,12 +162,12 @@ class warningsHandler extends handler {
 		//{id : {fecha, category, id, cantidad, mensaje}}
 		const idToDel = new Set()
 		await this.initialized;
-		const data = Objects.entries(this.data)
+		const data = Object.entries(this.data)
 		data.forEach(([key, value]) => {
 			let {category, id, quantity} = value
-			if (category === 'change' && change.read(id) > quantity) {
+			if (category === 'change' && this.change.read(id) > quantity) {
 				idToDel.add(key)
-			} else if (category === 'stock' && products.readStock(id) > quantity) {
+			} else if (category === 'stock' && this.products.readStock(id) > quantity) {
 				idToDel.add(key)
 			}
 		})
@@ -155,33 +175,37 @@ class warningsHandler extends handler {
 		await this.saveData()
 	}
 }
-const USERNAME = 'jangel'
-const PASS = 'aluminio'
-const MAX_AUTH_ATTEMPTS = 3
-async function access() {
-	let attempts = 1
-	while (attempts < MAX_AUTH_ATTEMPTS) {
-		let user = await input('Añade un usuario: ')
-		let pass = await input('Añade la contra: ')
-		if (user===USERNAME & pass ===PASS) {
-			console.log('Login correcto.')
-			return true
+
+class Admin {
+	constructor() {
+		this.USERNAME = 'jangel'
+		this.PASS = 'aluminio'
+		this.MAX_AUTH_ATTEMPTS = 3
+		this.products = new productsHandler("./products.json");
+		this.change = new changeHandler("./change.json");
+		this.warnings = new warningsHandler("./warnings.json");
+	}
+	async access() {
+		let attempts = 1
+		while (attempts < this.MAX_AUTH_ATTEMPTS) {
+			let user = await input('Añade un usuario: ')
+			let pass = await input('Añade la contra: ')
+			if (user===this.USERNAME & pass ===this.PASS) {
+				console.log('Login correcto.')
+				return true
+			}
+			attempts++
 		}
-		attempts++
+		console.log('Login fallido')
+		return false
 	}
-	console.log('Login fallido')
-	return false
-}
-async function menu(user, pass, products, change, warnings) {
-	let isLogin = await access()
-	if (!isLogin) {
-		rl.close()
-		return
-	}
-	const products = new productsHandler("./products.json");
-	const change = new changeHandler("./change.json");
-	const warnings = new warningsHandler("./warning.json");
-	const options = `
+	async menu() {
+		let isLogin = await this.access()
+		if (!isLogin) {
+			rl.close()
+			return
+		}
+		const options = `
 OPCIONES DE ADMINISTRADOR
 ---------------------------
 |  0 - Ver cambio         |
@@ -193,39 +217,42 @@ OPCIONES DE ADMINISTRADOR
 |  6 - Comprobar avisos   |
 |  7 - Salir              |
 ---------------------------`
-	console.log(options)
-	let option
-	while (true) {
-		do {
-			option = Number(await input("Elije una opción(0-7): "))
-		} while (isNaN(option) || option < 0 || option > 7)
-		switch (option) {
-			case 0:
-				await change.show()
-				break;
-			case 1:
-				await change.addChange()
-				break
-			case 2:
-				products.show('stock')
-				break
-			case 3:
-				await products.change('stock')
-				break
-			case 4:
-				await products.change('price')
-				break
-			case 5:
-				warnings.show()
-				break
-			case 6:
-				await warnings.check()
-				break
-			case 7:
-				console.log('Saliendo...')
-				rl.close()
-				return
+		let option
+		while (true) {
+			console.log(options)
+			do {
+				option = Number(await input("Elije una opción(0-7): "))
+			} while (isNaN(option) || option < 0 || option > 7)
+			switch (option) {
+				case 0:
+					await this.change.show()
+					break;
+				case 1:
+					await this.change.addChange()
+					break
+				case 2:
+					await this.products.show('stock')
+					break
+				case 3:
+					await this.products.change('stock')
+					break
+				case 4:
+					await this.products.change('price')
+					break
+				case 5:
+					await this.warnings.show()
+					break
+				case 6:
+					await this.warnings.check()
+					break
+				case 7:
+					console.log('Saliendo...')
+					rl.close()
+					return
+			}
 		}		
 	}
-
 }
+
+const enter = new Admin()
+enter.menu()

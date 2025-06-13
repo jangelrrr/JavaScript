@@ -1,7 +1,7 @@
 {
   "10": {
     "name": "Croissant",
-    "stock": 6,
+    "stock": 3,
     "price": 0.9
   },
   "11": {
@@ -11,7 +11,7 @@
   },
   "12": {
     "name": "Gofres",
-    "stock": 5,
+    "stock": 3,
     "price": 0.9
   },
   "13": {
@@ -41,7 +41,7 @@
   },
   "30": {
     "name": "Huesitos",
-    "stock": 10,
+    "stock": 9,
     "price": 0.4
   },
   "31": {
@@ -121,7 +121,7 @@
   },
   "50": {
     "name": "Agua",
-    "stock": 6,
+    "stock": 5,
     "price": 0.5
   },
   "51": {
@@ -141,7 +141,7 @@
   },
   "54": {
     "name": "Nestea",
-    "stock": 6,
-    "price": 1
+    "stock": 9,
+    "price": 1.2
   }
 }

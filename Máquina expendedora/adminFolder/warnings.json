@@ -1,16 +1,30 @@
 {
   "1": {
-    "TODAY": "2025-06-10T21:15:38.660Z",
-    "category": "change",
-    "id": 0.5,
+    "TODAY": "2025-06-13T21:25:09.950Z",
+    "category": "stock",
+    "id": "10",
     "quantity": 3,
-    "message": "Solo hay 3 monedas de 0.5"
+    "message": "Solo hay 3 productos de 10"
   },
   "2": {
-    "TODAY": "2025-06-10T21:05:44.587Z",
+    "TODAY": "2025-06-13T21:23:40.707Z",
     "category": "change",
-    "id": 0.1,
+    "id": 0.05,
     "quantity": 3,
-    "message": "Solo hay 3 monedas de 0.1"
+    "message": "Solo hay 3 monedas de 0.05"
+  },
+  "3": {
+    "TODAY": "2025-06-13T21:31:36.917Z",
+    "category": "change",
+    "id": 1,
+    "quantity": 3,
+    "message": "Solo hay 3 monedas de 1"
+  },
+  "4": {
+    "TODAY": "2025-06-13T21:36:51.493Z",
+    "category": "stock",
+    "id": "12",
+    "quantity": 3,
+    "message": "Solo hay 3 productos de 12"
   }
 }
