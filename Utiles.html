@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tratamientos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            margin: 20px 15px;
+        }
+        #input_container {
+            width: 100vw;
+            height: 40px;
+        }
+        #input {
+            width: 60%;
+            height: 100%;
+            font-size: 1.2rem;
+        }
+        #btnSend {
+            margin: 0 30px;
+            width: 20%;
+            height: 100%;
+        }
+        #options_container {
+            margin-top: 40px;
+            width: 50vw;
+            height: 40px;
+        }
+        option {
+            font-size: 1.2rem;
+        }
+        #result_container {
+            margin-top: 40px;
+            font-size: clamp(1rem, 1.2rem, 1.5rem);
+        }
+    </style>
+</head>
+<body>
+    <section id="input_container">
+        <input type="text" id="input">
+        <button id="btnSend">Enviar</button>
+    </section>
+    <select id="options_container" style="display:none;">
+    </select>
+    <section id="result_container">
+        <p id="result"></p>
+    </section>
+    <script>
+        const btnSend = document.getElementById('btnSend')
+        const optionsContain = document.getElementById('options_container')
+        const result = document.getElementById('result')
+        const data = {
+            '5101NDL': {'volante (6 meses)': "2025/07/29"},
+            'Pedro O Faro': {'volante (6 meses)': "2025/07/29"},
+            'Fredy Quelle': {'volante (6 meses)': "2025/08/02"},
+            '8749KBC': {'volante (6 meses)' : "2025/08/05"},
+            '9856KTX': {'volante (6 meses)': "2025/08/05"},
+            '0697JGB': {'volante (6 meses)': "2025/08/05"},
+            '9232HRY': {'volante (6 meses)': "2025/08/07"},
+            '6480LZD': {'volante (6 meses)': "2025/08/07", 'salpicadero (3 anos)': "2025/08/07"},
+            '7576JLX': {'volante (6 meses)' : "2025/08/08"},
+            '1098MTK': {'volante (6 meses)' : "2025/08/08"},
+            '3083MPJ': {'volante (6 meses)' : "2025/08/12"},
+            '6973GWZ': {'salpicadero (3 anos)': "2025/08/12"},
+            '8104KZJ': {'volante y reposabrazos (6 meses)': "2025/08/14", 'salpicadero (3 anos)': "2025/08/14"},
+            '2663HMV': {'volante (6 meses)' : "2025/08/18"},
+            '3964LFH': {'volante (6 meses)' : "2025/08/19"},
+            '9601LDT': {'volante (6 meses)' : "2025/08/19"},
+            '3125DSX': {'volante (6 meses)' : "2025/08/19"},
+            '4498GPM': {'volante (6 meses)' : "2025/08/20"},
+            '8959LFL': {'volante (6 meses)': "2025/08/21", 'salpicadero (3 anos)': "2025/08/21"},
+            '9271NCB': {'volante (6 meses)' : "2025/08/21"},
+            '6430HMZ': {'volante (6 meses)' : "2025/08/25"},
+            
+        }
+        function dilutions(input) {
+            const divider = Number(input.slice(1,)) + 1
+            let out = ''
+            out += `500ml: ${Math.floor(500/divider)}<br>`
+            out += `1000ml: ${Math.floor(1000/divider)}`
+            result.innerHTML = out
+        }
+        function calc(input) {
+            // Convertir el string ingresado en un array
+            const array = JSON.parse(input);
+            
+            // Tu lógica de procesamiento del array
+
+            let f = 0 
+            let t = 0 
+            let e = 0 
+            for (let i of array) {
+                if (i === " ") {
+                    continue
+                } else if (i[0] == 'f') {
+                    f += Number(i.slice(1, i.length))
+                } else if (i[0] == 't') {
+                    t += Number(i.slice(1, i.length))
+                } else if (i[0] == 'e') {
+                    e += Number(i.slice(1, i.length))
+                }
+            }
+    
+            function redondear (importe, tipo) {
+                let result = importe * tipo
+                let primer = parseInt(result /10) * 10
+                let restante = (result - primer) * 10
+                if (restante > 75) {
+                    primer += 10
+                } else if (restante < 50 && restante > 25) {
+                    primer += 5
+                }
+                return primer
+            }
+            let declara = t + redondear(e, 0.90)
+            let a = declara + f
+            let b = e + t + f
+            let factura = declara / 1.21
+            factura = String(factura).replace('.', ',')
+            let resultado = `A : ${a} B: ${b} Factura: ${factura}`
+            // Mostrar el resultado
+            result.innerHTML = resultado;
+        }
+        function getDiff(date1) {
+            let d1 = new Date(date1)
+            let d2 = new Date()
+            d2.setHours(0, 0, 0, 0)
+            if (d1.getTime() > d2.getTime()) {[d1, d2] = [d2, d1]}
+            let date
+            let years = 0
+            while (true) {
+                date = new Date(d1.getFullYear()+1, d1.getMonth(), d1.getDate())
+                if (d2.getTime() < date.getTime()) {
+                    break
+                }
+                d1 = date
+                years++
+            }
+            let months = 0
+            while (true) {
+                date = new Date(d1.getFullYear(), d1.getMonth()+1, d1.getDate())
+                if (date.getMonth() !== (d1.getMonth() + 1) % 12 || date.getDate() !== d1.getDate()) {
+                    date = new Date(d1.getFullYear(), d1.getMonth() +2, 0)
+                }
+                if (d2.getTime() < date.getTime()) {
+                    break
+                }
+                d1 = date
+                months++
+            }
+            let days = Math.floor((d2.getTime() - d1.getTime()) / (1000*60*60*24))
+            const dataTime = {
+                'años' : years,
+                'meses' : months,
+                'dias' : days
+            }
+            let out = `Hace `
+            Object.entries(dataTime).forEach(([key, value]) => {
+                if (value !== 0) {
+                    out += `${value} ${key}`
+                }
+            })
+            return out
+            
+        }
+        function showResult(inputData) {
+            const info = data[inputData]
+            const categories = Object.keys(info)
+            let out = ''
+            let diff
+            categories.forEach(v => {
+                diff = getDiff(info[v])
+                out += `${v}: ${diff}<br>`
+            })
+            result.innerHTML = out
+        }
+        const datas = Object.keys(data)
+        btnSend.addEventListener('click', () => {
+            let inputData = document.getElementById('input').value.trim()
+            if (inputData[0] === '[') {
+                optionsContain.style.display ='none'
+                calc(inputData)
+                return
+            } else if (inputData[0] === ':') {
+                optionsContain.style.display ='none'
+                dilutions(inputData)
+                return
+            }
+            optionsContain.innerHTML = '<option>Default</option>'
+            const options = []
+            datas.forEach(value => {
+                if (value.includes(inputData)) {
+                    options.push(value)
+                }
+            })
+            if (options.length === 0) {
+                alert('No se encontraron coincidencias')
+                optionsContain.style.display='none'
+                result.innerHTML = ''
+                return
+            } else if (options.length === 1) {
+                showResult(options[0])
+                return
+            }
+
+            options.forEach(value => {
+                const option = document.createElement('option')
+                option.value = value
+                option.textContent = value
+                optionsContain.append(option)
+            })
+            optionsContain.style.display = 'block'
+            result.innerHTML = ''
+        })
+        optionsContain.addEventListener('change', (event) => {
+            showResult(event.target.value)
+        })
+    </script>
+</body>
+</html>
